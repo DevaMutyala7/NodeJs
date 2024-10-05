@@ -1,8 +1,17 @@
-const http = require("http");
-const routes = require("./routes");
+const express = require("express");
 
-const server = http.createServer((req, res) => {
-  routes(req, res);
-});
+const product = require("./routes/products");
+const shop = require("./routes/shop");
+const pageNotFound = require("./routes/pageNotFound");
 
-server.listen(3000);
+const bodyparser = require("body-parser");
+
+const app = express();
+
+app.use(bodyparser.urlencoded({ extended: false }));
+
+app.use(product);
+app.use(shop);
+app.use(pageNotFound);
+
+app.listen(3000);
