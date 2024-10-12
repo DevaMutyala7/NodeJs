@@ -1,23 +1,24 @@
-const express = require("express");
 const path = require("path");
 
-const routes = require("./routes/products");
-const products = routes.products;
-const productRoute = routes.router;
-const shop = require("./routes/shop");
-const pageNotFound = require("./routes/pageNotFound");
+const express = require("express");
+const bodyParser = require("body-parser");
 
-const bodyparser = require("body-parser");
+const errorController = require("./controllers/error");
 
 const app = express();
 
-app.set("view engine", "pug");
+app.set("view engine", "ejs");
+app.set("views", "views");
 
-app.use(bodyparser.urlencoded({ extended: false }));
+const adminRoutes = require("./routes/admin");
+const shopRoutes = require("./routes/shop");
+
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use(productRoute);
-app.use(shop);
-app.use(pageNotFound);
+app.use("/admin", adminRoutes);
+app.use(shopRoutes);
+
+app.use(errorController.get404);
 
 app.listen(3000);
