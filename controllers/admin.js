@@ -1,3 +1,4 @@
+const { where } = require("sequelize");
 const Product = require("../models/product");
 
 exports.getAddProduct = (req, res, next) => {
@@ -13,7 +14,7 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  Product.create({ title, imageUrl, price, description }).then(() => {
+  req.user.createProduct({ title, imageUrl, price, description }).then(() => {
     res.redirect("/");
   });
 };
@@ -24,7 +25,7 @@ exports.getEditProduct = (req, res, next) => {
     return res.redirect("/");
   }
   const prodId = req.params.productId;
-  Product.findByPk(prodId).then((product) => {
+  req.user.getProducts({ where: { id: prodId } }).then(([product]) => {
     if (!product) {
       return res.redirect("/");
     }

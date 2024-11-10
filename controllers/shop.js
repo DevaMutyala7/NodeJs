@@ -1,8 +1,10 @@
 const Product = require("../models/product");
 const Cart = require("../models/cart");
+const CartItem = require("../models/cartItem");
 
 exports.getProducts = (req, res, next) => {
-  Product.findAll()
+  req.user
+    .getProducts()
     .then((products) => {
       res.render("shop/product-list", {
         prods: products,
@@ -39,32 +41,53 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.getCart = (req, res, next) => {
-  Cart.getCart((cart) => {
-    Product.fetchAll((products) => {
-      const cartProducts = [];
-      for (product of products) {
-        const cartProductData = cart.products.find(
-          (prod) => prod.id === product.id
-        );
-        if (cartProductData) {
-          cartProducts.push({ productData: product, qty: cartProductData.qty });
-        }
-      }
+  req.user
+    .getCart()
+    .then((cart) => {
+      return cart.getProducts();
+    })
+    .then((products) => {
+      console.log(
+        "products//////////////////////////////",
+        products.map((item) => item.dataValues)
+      );
       res.render("shop/cart", {
         path: "/cart",
         pageTitle: "Your Cart",
-        products: cartProducts,
+        products: products.map((item) => item.dataValues),
       });
-    });
-  });
+    })
+    .catch((err) => console.log("err in getCart", err));
 };
 
 exports.postCart = (req, res, next) => {
-  const prodId = req.body.productId;
-  Product.findById(prodId, (product) => {
-    Cart.addProduct(prodId, product.price);
-  });
-  res.redirect("/cart");
+  const { productId } = req.body;
+  let cartId;
+
+  req.user
+    .getCart()
+    .then(({ dataValues }) => {
+      cartId = dataValues.id;
+      return CartItem.findOne({ where: { productId: productId } });
+    })
+    .then((cartProd) => {
+      if (cartProd) {
+        CartItem.update(
+          { quantity: cartProd.quantity + 1 },
+          { where: { productId: productId } }
+        );
+      } else {
+        CartItem.create({
+          quantity: 1,
+          productId,
+          cartId,
+        });
+      }
+    })
+    .then(() => {
+      res.redirect("/cart");
+    })
+    .catch((err) => console.log("err in postcart", err));
 };
 
 exports.postCartDeleteProduct = (req, res, next) => {
