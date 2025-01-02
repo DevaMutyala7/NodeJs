@@ -1,32 +1,29 @@
 const Product = require("../models/product");
-// const Cart = require("../models/cart");
-// const CartItem = require("../models/cartItem");
 
-// exports.getProducts = (req, res, next) => {
-//   req.user
-//     .getProducts()
-//     .then((products) => {
-//       res.render("shop/product-list", {
-//         prods: products,
-//         pageTitle: "Products",
-//         path: "/products",
-//       });
-//     })
-//     .catch((err) => console.log(err));
-// };
+exports.getProducts = (req, res, next) => {
+  Product.findAll()
+    .then((products) => {
+      res.render("shop/product-list", {
+        prods: products,
+        pageTitle: "Products",
+        path: "/products",
+      });
+    })
+    .catch((err) => console.log(err));
+};
 
-// exports.getProduct = (req, res, next) => {
-//   const prodId = req.params.productId;
-//   Product.findByPk(prodId)
-//     .then((product) => {
-//       res.render("shop/product-detail", {
-//         product: product.dataValues,
-//         pageTitle: product.dataValues?.title || "New Product",
-//         path: "/products",
-//       });
-//     })
-//     .catch((err) => console.log("err", err));
-// };
+exports.getProduct = (req, res, next) => {
+  const prodId = req.params.productId;
+  Product.findOne(prodId)
+    .then((product) => {
+      res.render("shop/product-detail", {
+        product: product,
+        pageTitle: product.title || "New Product",
+        path: "/products",
+      });
+    })
+    .catch((err) => console.log("err in getting product", err));
+};
 
 exports.getIndex = (req, res, next) => {
   Product.findAll()
@@ -60,35 +57,7 @@ exports.getIndex = (req, res, next) => {
 //     .catch((err) => console.log("err in getCart", err));
 // };
 
-// exports.postCart = (req, res, next) => {
-//   const { productId } = req.body;
-//   let cartId;
-
-//   req.user
-//     .getCart()
-//     .then(({ dataValues }) => {
-//       cartId = dataValues.id;
-//       return CartItem.findOne({ where: { productId: productId } });
-//     })
-//     .then((cartProd) => {
-//       if (cartProd) {
-//         CartItem.update(
-//           { quantity: cartProd.quantity + 1 },
-//           { where: { productId: productId } }
-//         );
-//       } else {
-//         CartItem.create({
-//           quantity: 1,
-//           productId,
-//           cartId,
-//         });
-//       }
-//     })
-//     .then(() => {
-//       res.redirect("/cart");
-//     })
-//     .catch((err) => console.log("err in postcart", err));
-// };
+exports.postCart = (req, res, next) => {};
 
 // exports.postCartDeleteProduct = (req, res, next) => {
 //   const prodId = req.body.productId;
