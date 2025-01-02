@@ -1,4 +1,8 @@
+const mongoDb = require("mongodb");
+const User = require("../models/user");
 const Product = require("../models/product");
+
+const objectId = mongoDb.ObjectId.createFromHexString;
 
 exports.getProducts = (req, res, next) => {
   Product.findAll()
@@ -37,27 +41,26 @@ exports.getIndex = (req, res, next) => {
     .catch((err) => console.log("err", err));
 };
 
-// exports.getCart = (req, res, next) => {
-//   req.user
-//     .getCart()
-//     .then((cart) => {
-//       return cart.getProducts();
-//     })
-//     .then((products) => {
-//       console.log(
-//         "products//////////////////////////////",
-//         products.map((item) => item.dataValues)
-//       );
-//       res.render("shop/cart", {
-//         path: "/cart",
-//         pageTitle: "Your Cart",
-//         products: products.map((item) => item.dataValues),
-//       });
-//     })
-//     .catch((err) => console.log("err in getCart", err));
-// };
+exports.getCart = (req, res, next) => {
+  User.getCartItems(req.user._id)
+    .then((items) => {
+      res.render("shop/cart", {
+        path: "/cart",
+        pageTitle: "Your Cart",
+        products: items,
+      });
+    })
+    .catch((err) => console.log("err in getCart", err));
+};
 
-exports.postCart = (req, res, next) => {};
+exports.postCart = (req, res, next) => {
+  const userId = req.user._id;
+  const product = req.body.product;
+
+  User.addToCart(userId, product).then(() => {
+    res.redirect("/cart");
+  });
+};
 
 // exports.postCartDeleteProduct = (req, res, next) => {
 //   const prodId = req.body.productId;

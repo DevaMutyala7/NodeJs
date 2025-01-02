@@ -1,5 +1,6 @@
 const { getDb } = require("../utils/db");
 const mongoDb = require("mongodb");
+const Product = require("./product");
 
 const objectIdFunc = mongoDb.ObjectId.createFromHexString;
 class User {
@@ -33,6 +34,68 @@ class User {
       })
       .catch((err) => {
         console.log("error while finding user", err);
+      });
+  }
+
+  static addToCart(userId, product) {
+    let db = getDb();
+
+    return db
+      .collection("users")
+      .updateOne(
+        { _id: userId },
+        {
+          $set: {
+            cart: {
+              items: [
+                {
+                  productId: mongoDb.ObjectId.createFromHexString(product),
+                  quantity: 1,
+                },
+              ],
+            },
+          },
+        }
+      )
+      .then((val) => {
+        console.log("successfully added to cart", val);
+      })
+      .catch((err) => {
+        console.log("Error while adding to cart", err);
+      });
+  }
+
+  static getCartItems(userId) {
+    const db = getDb();
+
+    return db
+      .collection("users")
+      .find({ _id: userId })
+      .next()
+      .then((val) => {
+        console.log("items", val.cart.items);
+        return val.cart.items;
+      })
+      .then((products) => {
+        let productIds = products.map((item) => item.productId);
+        return db
+          .collection("products")
+          .find({ _id: { $in: [...productIds] } })
+          .toArray()
+          .then((val) => {
+            return val.map((item) => ({
+              ...item,
+              quantity: products.find(
+                (i) => i.productId.toString() === item._id.toString()
+              ).quantity,
+            }));
+          });
+      })
+      .then((items) => {
+        return items;
+      })
+      .catch((err) => {
+        console.log("err in getCartItems", err);
       });
   }
 }

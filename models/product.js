@@ -50,7 +50,7 @@ class Product {
     let db = getDb();
     return db
       .collection("products")
-      .find({ _id: mongoDb.ObjectId.createFromHexString(prodId) })
+      .find({ _id: prodId })
       .next()
       .then((val) => {
         return val;
