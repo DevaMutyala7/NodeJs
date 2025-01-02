@@ -39,30 +39,45 @@ class User {
 
   static addToCart(userId, product) {
     let db = getDb();
+    let quantity = 1;
+    let itemsTobeAdded = [];
 
     return db
       .collection("users")
-      .updateOne(
-        { _id: userId },
-        {
-          $set: {
-            cart: {
-              items: [
-                {
-                  productId: mongoDb.ObjectId.createFromHexString(product),
-                  quantity: 1,
-                },
-              ],
-            },
-          },
-        }
-      )
+      .find({ _id: userId })
+      .next()
       .then((val) => {
-        console.log("successfully added to cart", val);
+        return val.cart.items;
       })
-      .catch((err) => {
-        console.log("Error while adding to cart", err);
-      });
+      .then((items) => {
+        let itemIndex = items.findIndex((i) => i.productId == product);
+
+        if (itemIndex >= 0) {
+          quantity = items[itemIndex].quantity + 1;
+          items[itemIndex].quantity = quantity;
+          itemsTobeAdded = [...items];
+        } else {
+          itemsTobeAdded = [
+            ...items,
+            {
+              productId: mongoDb.ObjectId.createFromHexString(product),
+              quantity,
+            },
+          ];
+        }
+
+        return db.collection("users").updateOne(
+          { _id: userId },
+          {
+            $set: {
+              cart: {
+                items: itemsTobeAdded,
+              },
+            },
+          }
+        );
+      })
+      .catch((err) => console.log("Err in add to cart", err));
   }
 
   static getCartItems(userId) {
