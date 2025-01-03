@@ -1,6 +1,5 @@
 const { getDb } = require("../utils/db");
 const mongoDb = require("mongodb");
-const Product = require("./product");
 
 const objectIdFunc = mongoDb.ObjectId.createFromHexString;
 class User {
@@ -88,7 +87,6 @@ class User {
       .find({ _id: userId })
       .next()
       .then((val) => {
-        console.log("items", val.cart.items);
         return val.cart.items;
       })
       .then((products) => {
@@ -111,6 +109,32 @@ class User {
       })
       .catch((err) => {
         console.log("err in getCartItems", err);
+      });
+  }
+
+  static deleteCartItem(prodId, userId) {
+    let db = getDb();
+    return db
+      .collection("users")
+      .find({ _id: userId })
+      .next()
+      .then((user) =>
+        user.cart.items.filter(
+          (product) => product.productId.toString() !== prodId
+        )
+      )
+      .then((newCart) => {
+        db.collection("users").updateOne(
+          { _id: userId },
+          {
+            $set: {
+              cart: { items: newCart },
+            },
+          }
+        );
+      })
+      .catch((err) => {
+        console.log("err in deleting cart", err);
       });
   }
 }
