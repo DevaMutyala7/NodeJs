@@ -14,8 +14,16 @@ exports.postAddProduct = (req, res, next) => {
   const price = req.body.price;
   const description = req.body.description;
   const userId = req.user._id;
-  const product = new Product(title, price, imageUrl, description);
-  product.save(userId).then((result) => {
+  console.log("user id", userId);
+  const product = new Product({
+    title,
+    price,
+    imageUrl,
+    description,
+    userId,
+  });
+
+  product.save().then((result) => {
     res.redirect("/");
   });
 };
@@ -26,7 +34,9 @@ exports.getEditProduct = (req, res, next) => {
     return res.redirect("/");
   }
   const prodId = req.params.productId;
-  Product.findOne(prodId).then((product) => {
+
+  Product.findOne({ _id: prodId }).then((product) => {
+    console.log("prod", product);
     if (!product) {
       return res.redirect("/");
     }
@@ -45,15 +55,18 @@ exports.postEditProduct = (req, res, next) => {
   const updatedPrice = req.body.price;
   const updatedImageUrl = req.body.imageUrl;
   const updatedDesc = req.body.description;
-  let product = new Product(
-    updatedTitle,
-    updatedPrice,
-    updatedImageUrl,
-    updatedDesc
-  );
 
-  product
-    .updateProduct(prodId)
+  Product.updateOne(
+    { _id: prodId },
+    {
+      $set: {
+        title: updatedTitle,
+        price: updatedPrice,
+        imageUrl: updatedImageUrl,
+        description: updatedDesc,
+      },
+    }
+  )
     .then((value) => {
       console.log("updated", value);
       res.redirect("/admin/products");
@@ -63,7 +76,7 @@ exports.postEditProduct = (req, res, next) => {
 
 exports.getAdminProducts = (req, res, next) => {
   const userId = req.user._id;
-  Product.findByUserId(userId)
+  Product.find({ userId: userId })
     .then((products) => {
       res.render("admin/products", {
         prods: products,
@@ -76,7 +89,7 @@ exports.getAdminProducts = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.deleteProduct(prodId).then(() => {
+  Product.deleteOne({ _id: prodId }).then(() => {
     res.redirect("/admin/products");
   });
 };

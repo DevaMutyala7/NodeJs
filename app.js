@@ -1,5 +1,8 @@
+const mongoose = require("mongoose");
+const mongodb = require("mongodb");
 const path = require("path");
-const { mongoConnect } = require("./utils/db");
+
+const objectId = mongodb.ObjectId.createFromHexString;
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -19,7 +22,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use((req, res, next) => {
-  User.findUser("67763f29410140a04a40f8a8")
+  User.findOne({ _id: objectId("67791919ee1766402276e6cf") })
     .then((user) => {
       req.user = user;
       next();
@@ -32,6 +35,10 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-mongoConnect((client) => {
-  app.listen(3000);
-});
+mongoose
+  .connect(
+    "mongodb+srv://devateja58:s94h2d4DN2kh463r@cluster0.0duas.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+  )
+  .then((client) => {
+    app.listen(3000);
+  });
