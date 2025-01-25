@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const mongodb = require("mongodb");
 const path = require("path");
+const session = require("express-session");
 
 const objectId = mongodb.ObjectId.createFromHexString;
 
@@ -16,10 +17,25 @@ app.set("views", "views");
 
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
+const authRoutes = require("./routes/auth");
+
 const User = require("./models/user");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
+
+app.use((req, res, next) => {
+  if (req.get("Cookie") && req.get("Cookie").includes("loggedIn")) {
+    const cookie = req.get("Cookie").split(";")[0].split("=")[1];
+
+    const isLoggedIn = cookie.toLowerCase() === "true";
+
+    req.isLoggedIn = isLoggedIn;
+  } else {
+    req.isLoggedIn = false;
+  }
+  next();
+});
 
 app.use((req, res, next) => {
   User.findOne({ _id: objectId("67791919ee1766402276e6cf") })
@@ -32,7 +48,7 @@ app.use((req, res, next) => {
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
-
+app.use(authRoutes);
 app.use(errorController.get404);
 
 mongoose
