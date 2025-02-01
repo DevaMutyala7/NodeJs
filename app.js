@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const mongodb = require("mongodb");
 const path = require("path");
 const session = require("express-session");
+const MongoDbStore = require("connect-mongodb-session")(session);
 
 const objectId = mongodb.ObjectId.createFromHexString;
 
@@ -24,18 +25,38 @@ const User = require("./models/user");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use((req, res, next) => {
-  if (req.get("Cookie") && req.get("Cookie").includes("loggedIn")) {
-    const cookie = req.get("Cookie").split(";")[0].split("=")[1];
+const MONGODB_URI =
+  "mongodb+srv://devateja58:s94h2d4DN2kh463r@cluster0.0duas.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
-    const isLoggedIn = cookie.toLowerCase() === "true";
-
-    req.isLoggedIn = isLoggedIn;
-  } else {
-    req.isLoggedIn = false;
-  }
-  next();
+const store = new MongoDbStore({
+  uri: MONGODB_URI,
+  collection: "sessions",
 });
+
+app.use(
+  session({
+    secret: "My Node Js Application",
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      httpOnly: true,
+    },
+    store: store,
+  })
+);
+
+// app.use((req, res, next) => {
+//   if (req.get("Cookie") && req.get("Cookie").includes("loggedIn")) {
+//     const cookie = req.get("Cookie").split(";")[0].split("=")[1];
+
+//     const isLoggedIn = cookie.toLowerCase() === "true";
+
+//     req.isLoggedIn = isLoggedIn;
+//   } else {
+//     req.isLoggedIn = false;
+//   }
+//   next();
+// });
 
 app.use((req, res, next) => {
   User.findOne({ _id: objectId("67791919ee1766402276e6cf") })
@@ -51,10 +72,6 @@ app.use(shopRoutes);
 app.use(authRoutes);
 app.use(errorController.get404);
 
-mongoose
-  .connect(
-    "mongodb+srv://devateja58:s94h2d4DN2kh463r@cluster0.0duas.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-  )
-  .then((client) => {
-    app.listen(3000);
-  });
+mongoose.connect(MONGODB_URI).then((client) => {
+  app.listen(3000);
+});
