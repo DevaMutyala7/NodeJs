@@ -12,7 +12,8 @@
       "program": "${workspaceFolder}\\app.js",
       "restart": true,
       "runtimeExecutable": "nodemon",
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "runtimeArgs": ["--inspect=9230"]
     }
   ]
 }
